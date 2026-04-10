@@ -9,14 +9,14 @@ defineProps({
 
 <template>
   <el-card class="page-container">
-    <template v-slot:header>
-<div  class="header">
-      <span>{{ title }}</span>
-      <div class="extra">
-        <slot name="extra"></slot>
+    <template #header>
+      <div class="header">
+        <span>{{ title }}</span>
+        <div class="extra">
+          <slot name="extra"><span></span></slot>
+        </div>
       </div>
-    </div>
-</template>
+    </template>
 
     <slot></slot>
   </el-card>

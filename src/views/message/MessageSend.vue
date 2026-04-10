@@ -1,90 +1,89 @@
+<!-- eslint-disable no-undef -->
 <!-- eslint-disable no-unused-vars -->
 <script setup>
-import { ref } from 'vue'
-import { sendSystemMessageService, batchSendMessageService } from '@/api/admin/message'
-import { ElMessage, ElMessageBox, ElDialog } from 'element-plus'
-import { SendMessage, User } from '@element-plus/icons-vue'
+import { ref, onMounted } from 'vue'
+import {
+  sendSystemMessageService,
+  getMessageListService,
+  deleteMessageService,
+} from '@/api/message'
+import { ElMessage } from 'element-plus'
+import { Promotion } from '@element-plus/icons-vue'
+import { formatTime } from '@/utils/format'
 
 const formModel = ref({
-  title: '',
-  content: '',
   user_id: '',
+  msg_content: '',
+  msg_type: 1, // 1: 系统通知, 2: 交易通知
 })
-const batchFormModel = ref({
-  title: '',
-  content: '',
-  user_ids: '',
+const messageList = ref([])
+
+const getMessageList = async () => {
+  try {
+    const res = await getMessageListService()
+    messageList.value = res.data.filter((item) => item.related_id === null)
+    console.log(messageList.value)
+  } catch (error) {
+    ElMessage.error('获取消息列表失败')
+  }
+}
+
+onMounted(() => {
+  getMessageList()
 })
-const batchDialogVisible = ref(false)
 
 const handleSendMessage = async () => {
-  if (!formModel.value.title) {
-    ElMessage.error('消息标题不能为空')
+  if (!formModel.value.user_id) {
+    ElMessage.error('请输入用户ID')
     return
   }
-  if (!formModel.value.content) {
+  if (isNaN(Number(formModel.value.user_id))) {
+    ElMessage.error('用户ID必须是数字')
+    return
+  }
+  if (!formModel.value.msg_content) {
     ElMessage.error('消息内容不能为空')
     return
   }
-  if (!formModel.value.user_id) {
-    ElMessage.error('请输入用户ID')
+  if (!formModel.value.msg_type) {
+    ElMessage.error('请选择消息类型')
     return
   }
 
   try {
     await sendSystemMessageService({
-      user_id: formModel.value.user_id,
-      title: formModel.value.title,
-      content: formModel.value.content,
+      user_id: Number(formModel.value.user_id),
+      msg_content: formModel.value.msg_content,
+      msg_type: Number(formModel.value.msg_type),
     })
     ElMessage.success('消息发送成功')
+    getMessageList()
     // 清空表单
     formModel.value = {
-      title: '',
-      content: '',
+      msg_content: '',
       user_id: '',
+      msg_type: 1,
     }
   } catch (error) {
     ElMessage.error('消息发送失败')
   }
 }
 
-const handleBatchSendMessage = async () => {
-  if (!batchFormModel.value.title) {
-    ElMessage.error('消息标题不能为空')
-    return
-  }
-  if (!batchFormModel.value.content) {
-    ElMessage.error('消息内容不能为空')
-    return
-  }
-  if (!batchFormModel.value.user_ids) {
-    ElMessage.error('请输入用户ID列表')
-    return
-  }
-
-  try {
-    const userIds = batchFormModel.value.user_ids.split(',').map((id) => id.trim())
-    await batchSendMessageService({
-      user_ids: userIds,
-      title: batchFormModel.value.title,
-      content: batchFormModel.value.content,
-    })
-    ElMessage.success('批量消息发送成功')
-    batchDialogVisible.value = false
-    // 清空表单
-    batchFormModel.value = {
-      title: '',
-      content: '',
-      user_ids: '',
+const handleDeleteMessage = async (row) => {
+  // 确认删除
+  ElMessageBox.confirm('确定要撤回该消息吗？', '温馨提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'danger',
+  }).then(async () => {
+    try {
+      await deleteMessageService({ msg_id: row.msg_id, user_id: row.user_id })
+      ElMessage.success('消息撤回成功')
+      getMessageList()
+    } catch (error) {
+      ElMessage.error('消息撤回失败')
     }
-  } catch (error) {
-    ElMessage.error('批量消息发送失败')
-  }
-}
-
-const openBatchDialog = () => {
-  batchDialogVisible.value = true
+  })
 }
 </script>
 
@@ -102,12 +101,19 @@ const openBatchDialog = () => {
           <el-form-item label="用户ID">
             <el-input v-model="formModel.user_id" placeholder="请输入用户ID" />
           </el-form-item>
-          <el-form-item label="消息标题">
-            <el-input v-model="formModel.title" placeholder="请输入消息标题" />
+          <el-form-item label="消息类型">
+            <el-select
+              v-model="formModel.msg_type"
+              placeholder="请选择消息类型"
+              style="width: 120px"
+            >
+              <el-option label="系统通知" :value="1" />
+              <el-option label="交易通知" :value="2" />
+            </el-select>
           </el-form-item>
           <el-form-item label="消息内容">
             <el-input
-              v-model="formModel.content"
+              v-model="formModel.msg_content"
               placeholder="请输入消息内容"
               type="textarea"
               :rows="4"
@@ -115,56 +121,42 @@ const openBatchDialog = () => {
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="handleSendMessage">
-              <el-icon><SendMessage /></el-icon>
+              <el-icon><Promotion /></el-icon>
               发送消息
-            </el-button>
-            <el-button type="info" @click="openBatchDialog">
-              <el-icon><User /></el-icon>
-              批量发送
             </el-button>
           </el-form-item>
         </el-form>
       </el-card>
 
-      <!-- 批量发送消息对话框 -->
-      <el-dialog v-model="batchDialogVisible" title="批量发送消息" width="600px">
-        <el-form :model="batchFormModel" label-width="100px">
-          <el-form-item label="用户ID列表">
-            <el-input
-              v-model="batchFormModel.user_ids"
-              placeholder="请输入用户ID，多个ID用逗号分隔"
-              type="textarea"
-              :rows="3"
-            />
-          </el-form-item>
-          <el-form-item label="消息标题">
-            <el-input v-model="batchFormModel.title" placeholder="请输入消息标题" />
-          </el-form-item>
-          <el-form-item label="消息内容">
-            <el-input
-              v-model="batchFormModel.content"
-              placeholder="请输入消息内容"
-              type="textarea"
-              :rows="4"
-            />
-          </el-form-item>
-        </el-form>
-        <template #footer>
-          <span class="dialog-footer">
-            <el-button @click="batchDialogVisible = false">取消</el-button>
-            <el-button type="primary" @click="handleBatchSendMessage">发送消息</el-button>
-          </span>
-        </template>
-      </el-dialog>
-
       <!-- 消息发送记录 -->
       <el-card shadow="hover" class="message-card" style="margin-top: 30px">
-        <template #header>
+        <template v-if="messageList.length > 0" #header>
           <div class="card-header">
-            <span>消息发送记录</span>
+            <el-table :data="messageList" style="width: 100%">
+              <el-table-column prop="msg_id" label="消息ID" width="100" />
+              <el-table-column prop="user_id" label="用户ID" width="100" />
+              <el-table-column prop="msg_type" label="消息类型" width="150">
+                <template #default="{ row }">
+                  {{ row.msg_type === 1 ? '系统通知' : '交易通知' }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="msg_content" label="消息内容" min-width="200" />
+              <el-table-column prop="create_time" label="发送时间" width="150">
+                <template #default="{ row }">
+                  {{ formatTime(row.create_time) }}
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="80">
+                <template #default="{ row }">
+                  <el-button type="danger" size="small" @click="handleDeleteMessage(row)">
+                    撤回
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
           </div>
         </template>
-        <el-empty description="暂无消息发送记录" />
+        <el-empty v-if="messageList.length === 0" description="暂无消息发送记录" />
       </el-card>
     </div>
   </page-container>

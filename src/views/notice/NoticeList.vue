@@ -7,7 +7,7 @@ import {
   editNoticeService,
   deleteNoticeService,
   topNoticeService,
-} from '@/api/admin/notice'
+} from '@/api/notice'
 import { ElMessage, ElMessageBox, ElDialog } from 'element-plus'
 import { Edit, Delete, Plus, RefreshLeft, Star } from '@element-plus/icons-vue'
 import { formatTime } from '@/utils/format'
@@ -22,30 +22,43 @@ const params = ref({
 const dialogVisible = ref(false)
 const currentNotice = ref({})
 const formModel = ref({
-  title: '',
-  content: '',
-  top: 0,
+  notice_title: '',
+  notice_content: '',
+  is_top: 0,
+  is_show: 0,
 })
 
 const getNoticeList = async () => {
   loading.value = true
-  try {
-    const res = await getNoticeListService(params.value)
-    noticeList.value = res.data
-    total.value = res.total
-  } catch (error) {
-    ElMessage.error('获取公告列表失败')
-  } finally {
-    loading.value = false
-  }
+  await getNoticeListService(params.value)
+    .then((res) => {
+      noticeList.value = res.data
+      total.value = res.total
+    })
+    .catch(() => {
+      ElMessage.error('获取公告列表失败')
+    })
+    .finally(() => {
+      loading.value = false
+    })
+  // try {
+  //   const res = await getNoticeListService(params.value)
+  //   noticeList.value = res.data
+  //   total.value = res.total
+  // } catch (error) {
+  //   ElMessage.error('获取公告列表失败')
+  // } finally {
+  //   loading.value = false
+  // }
 }
 
 const handleAddNotice = () => {
   currentNotice.value = {}
   formModel.value = {
-    title: '',
-    content: '',
-    top: 0,
+    notice_title: '',
+    notice_content: '',
+    is_top: 0,
+    is_show: 0,
   }
   dialogVisible.value = true
 }
@@ -53,9 +66,10 @@ const handleAddNotice = () => {
 const handleEditNotice = (row) => {
   currentNotice.value = { ...row }
   formModel.value = {
-    title: row.title,
-    content: row.content,
-    top: row.top,
+    notice_title: row.notice_title,
+    notice_content: row.notice_content,
+    is_top: row.is_top,
+    is_show: row.is_show,
   }
   dialogVisible.value = true
 }
@@ -68,7 +82,7 @@ const handleDeleteNotice = (row) => {
   })
     .then(async () => {
       try {
-        await deleteNoticeService(row.id)
+        await deleteNoticeService(row.notice_id)
         ElMessage.success('公告删除成功')
         getNoticeList()
       } catch (error) {
@@ -80,7 +94,7 @@ const handleDeleteNotice = (row) => {
 
 const handleTopNotice = async (row) => {
   try {
-    await topNoticeService(row.id)
+    await topNoticeService(row.notice_id)
     ElMessage.success('公告置顶成功')
     getNoticeList()
   } catch (error) {
@@ -89,17 +103,17 @@ const handleTopNotice = async (row) => {
 }
 
 const handleSaveNotice = async () => {
-  if (!formModel.value.title) {
+  if (!formModel.value.notice_title) {
     ElMessage.error('公告标题不能为空')
     return
   }
-  if (!formModel.value.content) {
+  if (!formModel.value.notice_content) {
     ElMessage.error('公告内容不能为空')
     return
   }
 
   try {
-    if (currentNotice.value.id) {
+    if (currentNotice.value.notice_id) {
       // 编辑公告
       await editNoticeService({ ...currentNotice.value, ...formModel.value })
       ElMessage.success('公告编辑成功')
@@ -115,6 +129,16 @@ const handleSaveNotice = async () => {
   }
 }
 
+const handleStatusChange = async (row) => {
+  try {
+    await editNoticeService({ ...row, is_show: row.is_show })
+    ElMessage.success('操作成功')
+    getNoticeList()
+  } catch (error) {
+    ElMessage.error('操作失败')
+  }
+}
+
 onMounted(() => {
   getNoticeList()
 })
@@ -123,11 +147,11 @@ onMounted(() => {
 <template>
   <page-container title="公告管理">
     <template #extra>
-      <el-button type="primary" @click="handleAddNotice">
+      <el-button type="success" @click="handleAddNotice">
         <el-icon><Plus /></el-icon>
         发布公告
       </el-button>
-      <el-button type="info" @click="getNoticeList">
+      <el-button type="primary" @click="getNoticeList">
         <el-icon><RefreshLeft /></el-icon>
         刷新
       </el-button>
@@ -135,33 +159,44 @@ onMounted(() => {
 
     <!-- 公告列表 -->
     <el-table :data="noticeList" style="width: 100%" v-loading="loading">
-      <el-table-column prop="id" label="公告ID" width="80" />
-      <el-table-column prop="title" label="公告标题" min-width="200">
+      <el-table-column prop="notice_id" label="公告ID" width="80" />
+      <el-table-column prop="notice_title" label="公告标题" min-width="200">
         <template #default="{ row }">
-          <span v-if="row.top === 1" style="color: #f56c6c; font-weight: bold">
-            [置顶] {{ row.title }}
+          <span v-if="row.is_top === 1" style="color: #f56c6c; font-weight: bold">
+            [置顶] {{ row.notice_title }}
           </span>
-          <span v-else>{{ row.title }}</span>
+          <span v-else>{{ row.notice_title }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="content" label="公告内容" min-width="300">
+      <el-table-column prop="notice_content" label="公告内容" min-width="300">
         <template #default="{ row }">
-          <span>{{ row.content.substring(0, 100) }}...</span>
+          <span
+            style="max-lines: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
+            >{{ row.notice_content.substring(0, 100) }}</span
+          >
         </template>
       </el-table-column>
-      <el-table-column prop="created_by" label="发布人" width="120" />
-      <el-table-column prop="created_at" label="发布时间" width="180">
+      <!-- <el-table-column prop="created_by" label="发布人" width="120" /> -->
+      <!-- 是否显示 -->
+      <el-table-column label="状态">
         <template #default="{ row }">
-          {{ formatTime(row.created_at) }}
+          <el-switch
+            v-model="row.is_show"
+            :active-value="1"
+            :inactive-value="0"
+            @change="handleStatusChange(row)"
+          />
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="200">
+      <el-table-column prop="create_time" label="发布时间" width="180">
+        <template #default="{ row }">
+          {{ formatTime(row.create_time) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="240">
         <template #default="{ row }">
           <el-button plain size="small" type="primary" :icon="Edit" @click="handleEditNotice(row)">
             编辑
-          </el-button>
-          <el-button plain size="small" type="warning" :icon="Star" @click="handleTopNotice(row)">
-            置顶
           </el-button>
           <el-button
             plain
@@ -171,6 +206,16 @@ onMounted(() => {
             @click="handleDeleteNotice(row)"
           >
             删除
+          </el-button>
+          <el-button
+            :disabled="row.is_top === 1"
+            plain
+            size="small"
+            type="warning"
+            :icon="Star"
+            @click="handleTopNotice(row)"
+          >
+            置顶
           </el-button>
         </template>
       </el-table-column>
@@ -191,23 +236,26 @@ onMounted(() => {
     <!-- 公告编辑对话框 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="currentNotice.id ? '编辑公告' : '发布公告'"
+      :title="currentNotice.notice_id ? '编辑公告' : '发布公告'"
       width="600px"
     >
       <el-form :model="formModel" label-width="80px">
         <el-form-item label="公告标题">
-          <el-input v-model="formModel.title" placeholder="请输入公告标题" />
+          <el-input v-model="formModel.notice_title" placeholder="请输入公告标题" />
         </el-form-item>
         <el-form-item label="公告内容">
           <el-input
-            v-model="formModel.content"
+            v-model="formModel.notice_content"
             placeholder="请输入公告内容"
             type="textarea"
             :rows="6"
           />
         </el-form-item>
         <el-form-item label="是否置顶">
-          <el-switch v-model="formModel.top" :active-value="1" :inactive-value="0" />
+          <el-switch v-model="formModel.is_top" :active-value="1" :inactive-value="0" />
+        </el-form-item>
+        <el-form-item label="是否显示">
+          <el-switch v-model="formModel.is_show" :active-value="1" :inactive-value="0" />
         </el-form-item>
       </el-form>
       <template #footer>

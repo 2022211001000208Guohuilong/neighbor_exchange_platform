@@ -3,6 +3,49 @@ body {
   background-color: #f5f5f5;
 }
 
+.el-table {
+  --el-table-border-color: rgba(15, 23, 42, 0.08);
+  --el-table-header-bg-color: rgba(15, 23, 42, 0.03);
+  --el-table-row-hover-bg-color: rgba(0, 194, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.el-table .el-table__inner-wrapper {
+  border-radius: 12px;
+}
+
+.el-table th.el-table__cell {
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.75);
+}
+
+.el-table td.el-table__cell {
+  color: rgba(15, 23, 42, 0.72);
+}
+
+.el-table__body tr:hover > td.el-table__cell {
+  transition: background-color 0.15s ease;
+}
+
+.el-table .el-button.is-plain {
+  border-radius: 10px;
+}
+
+.el-pagination {
+  margin-top: 16px;
+}
+
+.el-card {
+  border-radius: 14px;
+}
+
+.el-card.is-hover-shadow:hover {
+  box-shadow:
+    0 18px 40px rgba(15, 23, 42, 0.08),
+    0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
 /* fade-slide */
 .fade-slide-leave-active,
 .fade-slide-enter-active {
@@ -17,4 +60,15 @@ body {
 .fade-slide-leave-to {
   transform: translateX(30px);
   opacity: 0;
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }

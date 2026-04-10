@@ -4,7 +4,7 @@ import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 </script>
 
 <template>
-  <div>
+  <div class="app-container">
     <!-- 路由出口 -->
     <el-config-provider :locale="zhCn">
       <router-view></router-view>
@@ -12,4 +12,8 @@ import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.app-container {
+  height: 100vh;
+}
+</style>

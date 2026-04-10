@@ -1,34 +1,25 @@
 import request from '@/utils/request.js'
 
-//注册接口
-export const userRegisterService = ({ username, password, repassword }) => {
-  return request.post('https://big-event-vue-api-t.itheima.net/api/reg', {
-    username,
-    password,
-    repassword,
-  })
-}
+//管理员登录接口
+export const adminLoginService = ({ username, password }) =>
+  request.post('/admin/login', { username, password })
 
-//登录接口
-export const userLoginService = ({ username, password }) =>
-  request.post('https://big-event-vue-api-t.itheima.net/api/login', { username, password })
+// 获取用户列表
+export const getUserListService = (params) => request.get('/user/list', { params })
 
-//获取用户基本信息
-export const userGetInfo = () => {
-  return request.get('https://big-event-vue-api-t.itheima.net/my/userinfo')
-}
+// 更新用户信息
+export const updateUserService = (data) => request.post('/user/update', data)
 
-//更新用户基本信息
-export const userUpdateInfo = (data) => {
-  return request.put('https://big-event-vue-api-t.itheima.net/my/userinfo', data)
-}
+// 封禁用户
+export const banUserService = (user_id, user_status) =>
+  request.post('/admin/user/ban', { user_id, user_status })
 
-//更新用户头像
-export const userUpdateAvatar = (avatar) => {
-  return request.patch('https://big-event-vue-api-t.itheima.net/my/update/avatar', { avatar })
-}
+// 重置用户密码
+export const resetUserPasswordService = (user_id) =>
+  request.post('/user/reset-password', { user_id })
 
-//重置密码
-export const userResetPassword = (data) => {
-  return request.patch('https://big-event-vue-api-t.itheima.net/my/updatepwd', data)
-}
+// 获取用户统计数据
+export const getUserStatisticService = () => request.get('/admin/statistics/user')
+
+// 删除用户
+export const deleteUser = (user_id) => request.delete('/user/delete', { params: { user_id } })

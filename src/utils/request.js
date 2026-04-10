@@ -3,7 +3,8 @@ import { useUserStore } from '@/stores'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
 
-const baseURL = 'http://big-event-vue-api-t.itheima.net'
+// const baseURL = 'http://big-event-vue-api-t.itheima.net'http://${localhost}:3001
+const baseURL = 'http://10.32.148.202:3001' //10.32.148.202
 
 const instance = axios.create({
   baseURL,
@@ -27,7 +28,8 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
   (res) => {
     // 摘取核心响应数据
-    if (res.data.code === 0) {
+    if (res.data.code === 200) {
+      // 修改为200
       // 只返回数据部分，简化组件中的使用
       return res.data
     }
@@ -43,10 +45,35 @@ instance.interceptors.response.use(
   (err) => {
     // 处理401错误
     if (err.response?.status === 401) {
-      // 清除过期的token
       const userStore = useUserStore()
-      userStore.clearToken()
-      router.push('/login')
+      const reqUrl = err.config?.url || ''
+      const isLoginRequest = reqUrl.includes('/admin/login')
+
+      if (isLoginRequest) {
+        return Promise.reject(err.response?.data || err)
+      }
+
+      if (!userStore.token) {
+        router.push('/login')
+        ElMessage({
+          message: err.response?.data?.message || '请先登录',
+          type: 'warning',
+        })
+        return Promise.reject(err.response?.data || err)
+      }
+
+      // 清除过期的token
+      if (typeof userStore.clearToken === 'function') {
+        userStore.clearToken()
+      } else if (typeof userStore.removeToken === 'function') {
+        userStore.removeToken()
+      } else {
+        userStore.token = ''
+      }
+      if (typeof userStore.setUser === 'function') {
+        userStore.setUser({})
+      }
+      if (router.currentRoute.value.path !== '/login') router.push('/login')
       ElMessage({
         message: '登录已过期，请重新登录',
         type: 'warning',
@@ -60,7 +87,7 @@ instance.interceptors.response.use(
         showClose: true,
       })
     }
-    return Promise.reject(err)
+    return Promise.reject(err.response?.data || err)
   },
 )
 

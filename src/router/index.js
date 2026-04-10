@@ -1,10 +1,6 @@
 /* eslint-disable no-unused-vars */
-import ArticleChannel from '@/views/article/ArticleChannel.vue'
-import ArticleManage from '@/views/article/ArticleManage.vue'
 import LayoutContainer from '@/views/layout/LayoutContainer.vue'
-import UserAvatar from '@/views/user/UserAvatar.vue'
-import UserPassword from '@/views/user/UserPassword.vue'
-import UserProfile from '@/views/user/UserProfile.vue'
+import UserPassword from '@/views/setting/UserPassword.vue'
 import loginPage from '@/views/login/LoginPage.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores'
@@ -21,18 +17,8 @@ const router = createRouter({
         // 数据看板
         { path: '/dashboard', component: () => import('@/views/dashboard/DashboardView.vue') },
 
-        // 文章管理
-        { path: '/article/manage', component: ArticleManage },
-        { path: '/article/channel', component: ArticleChannel },
-
-        // 个人中心
-        { path: '/user/profile', component: UserProfile },
-        { path: '/user/avatar', component: UserAvatar },
-        { path: '/user/password', component: UserPassword },
-
         // 用户管理
         { path: '/user/list', component: () => import('@/views/user/UserList.vue') },
-        { path: '/user/detail', component: () => import('@/views/user/UserProfile.vue') },
         { path: '/user/statistic', component: () => import('@/views/user/UserStatistic.vue') },
 
         // 商品管理
@@ -48,11 +34,14 @@ const router = createRouter({
         { path: '/notice/list', component: () => import('@/views/notice/NoticeList.vue') },
 
         // 消息管理
-        { path: '/message/send', component: () => import('@/views/message/MessageSend.vue') },
+        {
+          path: '/message/MessageSend',
+          component: () => import('@/views/message/MessageSend.vue'),
+        },
 
-        // 系统设置
+        // 账号管理
         { path: '/setting/admin', component: () => import('@/views/setting/AdminManage.vue') },
-        { path: '/setting/config', component: () => import('@/views/setting/SystemConfig.vue') },
+        { path: '/user/password', component: UserPassword },
       ],
     },
   ],
