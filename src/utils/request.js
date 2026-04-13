@@ -3,13 +3,7 @@ import { useUserStore } from '@/stores'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
 
-const envBaseURL = import.meta.env.VITE_API_BASE_URL
-const runtimeBaseURL =
-  typeof window !== 'undefined'
-    ? `${window.location.protocol}//${window.location.hostname}:3001`
-    : 'http://localhost:3001'
-
-const baseURL = envBaseURL || (import.meta.env.DEV ? runtimeBaseURL : '')
+const baseURL = 'http://10.32.62.156:3001'
 const instance = axios.create({
   baseURL,
   timeout: 10000,
