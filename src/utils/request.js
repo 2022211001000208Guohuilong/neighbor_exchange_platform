@@ -3,14 +3,16 @@ import { useUserStore } from '@/stores'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
 
+// const baseURL = 'http://big-event-vue-api-t.itheima.net'http://${localhost}:3001
+// const baseURL = 'http://10.32.148.202:3001' //10.32.148.202
+
 const envBaseURL = import.meta.env.VITE_API_BASE_URL
 const runtimeBaseURL =
   typeof window !== 'undefined'
     ? `${window.location.protocol}//${window.location.hostname}:3001`
     : 'http://localhost:3001'
 
-const baseURL = envBaseURL || runtimeBaseURL
-
+const baseURL = envBaseURL || (import.meta.env.DEV ? runtimeBaseURL : '')
 const instance = axios.create({
   baseURL,
   timeout: 10000,
