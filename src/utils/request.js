@@ -12,7 +12,7 @@ const runtimeBaseURL =
     ? `${window.location.protocol}//${window.location.hostname}:3001`
     : 'http://localhost:3001'
 
-const baseURL = envBaseURL || (import.meta.env.DEV ? runtimeBaseURL : '')
+const baseURL = envBaseURL || runtimeBaseURL
 
 const instance = axios.create({
   baseURL,
