@@ -17,3 +17,6 @@ export const updateAdminPasswordService = (data) => request.post('/admin/updateP
 
 // 删除管理员
 export const deleteAdminService = (id) => request.post('/admin/delete', { id })
+
+// 封禁/解封管理员
+export const banAdminService = (id, status) => request.post('/admin/ban', { id, status })

@@ -16,6 +16,7 @@ import {
   Key,
   Message,
   Sell,
+  Promotion,
 } from '@element-plus/icons-vue'
 import adminAvatar from '@/assets/admin.png'
 import adminGeneralAvatar from '@/assets/admin_general.png'
@@ -118,10 +119,24 @@ onMounted(() => {
           </el-menu-item>
 
           <!-- 消息管理 -->
-          <el-menu-item index="/message/MessageSend">
+          <!-- <el-menu-item index="/message/MessageSend">
             <el-icon><Message /></el-icon>
             <span>消息管理</span>
-          </el-menu-item>
+          </el-menu-item> -->
+          <el-sub-menu index="/message">
+            <template #title>
+              <el-icon><Message /></el-icon>
+              <span>消息管理</span>
+            </template>
+            <el-menu-item index="/message/MessageList">
+              <el-icon><List /></el-icon>
+              <span>消息列表</span>
+            </el-menu-item>
+            <el-menu-item index="/message/MessageSend">
+              <el-icon><Promotion /></el-icon>
+              <span>消息发送</span>
+            </el-menu-item>
+          </el-sub-menu>
 
           <!-- 用户管理 -->
           <el-sub-menu index="/user">

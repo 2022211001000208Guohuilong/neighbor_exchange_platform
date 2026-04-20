@@ -17,15 +17,29 @@ const formModel = ref({
   msg_type: 1, // 1: 系统通知, 2: 交易通知
 })
 const messageList = ref([])
+const total = ref(0)
+const params = ref({
+  pagenum: 1,
+  pagesize: 10,
+})
+const list = ref([])
 
 const getMessageList = async () => {
   try {
     const res = await getMessageListService()
-    messageList.value = res.data.filter((item) => item.related_id === null)
-    console.log(messageList.value)
+    list.value = res.data.filter((item) => item.related_id === null)
+    messageList.value = list.value
+    total.value = list.value.length
   } catch (error) {
     ElMessage.error('获取消息列表失败')
   }
+}
+
+const handlePage = () => {
+  messageList.value = list.value.slice(
+    (params.value.pagenum - 1) * params.value.pagesize,
+    params.value.pagenum * params.value.pagesize,
+  )
 }
 
 onMounted(() => {
@@ -155,6 +169,18 @@ const handleDeleteMessage = async (row) => {
               </el-table-column>
             </el-table>
           </div>
+          <!-- 分页 -->
+          <el-pagination
+            v-model:current-page="params.pagenum"
+            v-model:page-size="params.pagesize"
+            :page-sizes="[10, 20, 50, 100]"
+            :background="true"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            @size-change="handlePage"
+            @current-change="handlePage"
+            style="margin-top: 20px; display: flex; justify-content: flex-end"
+          />
         </template>
         <el-empty v-if="messageList.length === 0" description="暂无消息发送记录" />
       </el-card>

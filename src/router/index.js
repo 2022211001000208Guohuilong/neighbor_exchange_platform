@@ -35,6 +35,10 @@ const router = createRouter({
 
         // 消息管理
         {
+          path: '/message/MessageList',
+          component: () => import('@/views/message/MessageList.vue'),
+        },
+        {
           path: '/message/MessageSend',
           component: () => import('@/views/message/MessageSend.vue'),
         },

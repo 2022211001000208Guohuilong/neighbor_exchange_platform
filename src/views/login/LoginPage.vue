@@ -1,7 +1,10 @@
+<!-- eslint-disable no-undef -->
+<!-- eslint-disable no-unused-vars -->
 <script setup>
 import { User, Lock } from '@element-plus/icons-vue'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { adminLoginService } from '@/api/user'
+import { sendAdminMessageService } from '@/api/message'
 import router from '@/router'
 import { useUserStore } from '@/stores/modules/user'
 import { ElMessage } from 'element-plus'
@@ -11,9 +14,13 @@ const form = ref()
 const loginLoading = ref(false)
 const rememberMe = ref(false)
 const capsLockOn = ref(false)
+const captchaGeneratedCode = ref('')
+const captchaCanvas = ref(null)
+
 const formModel = ref({
   username: '',
   password: '',
+  captcha: '',
 })
 const rules = {
   username: [
@@ -25,13 +32,63 @@ const rules = {
     { required: true, message: '请输入密码', trigger: 'blur' },
     { pattern: /^\S{3,15}$/, message: '密码必须是 3-15 位非空字符', trigger: 'change' },
   ],
+  captcha: [{ required: true, message: '请输入验证码', trigger: 'blur' }],
+}
+
+// 生成验证码
+const generateCaptcha = () => {
+  const chars = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678'
+  let code = ''
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  captchaGeneratedCode.value = code
+
+  // 绘制图形
+  const canvas = captchaCanvas.value
+  if (!canvas) return
+  const ctx = canvas.getContext('2d')
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.fillStyle = '#f3fbfe'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  // 干扰线
+  for (let i = 0; i < 4; i++) {
+    ctx.strokeStyle = `rgba(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255},0.3)`
+    ctx.beginPath()
+    ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height)
+    ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height)
+    ctx.stroke()
+  }
+
+  // 绘制文字
+  ctx.font = 'bold 24px Arial'
+  ctx.textBaseline = 'middle' // 使用中线对齐
+  for (let i = 0; i < code.length; i++) {
+    ctx.fillStyle = `rgb(${Math.random() * 150},${Math.random() * 150},${Math.random() * 150})`
+    ctx.save()
+    // 调整位置：起始 15，间距 25，垂直居中 (canvas 高度为 40)
+    ctx.translate(15 + i * 25, 20)
+    ctx.rotate(((Math.random() * 40 - 20) * Math.PI) / 180) // 旋转角度控制在 -20 到 20 度
+    ctx.fillText(code[i], 0, 0)
+    ctx.restore()
+  }
 }
 
 const login = async () => {
   if (loginLoading.value) return
+
   try {
     await form.value.validate()
   } catch {
+    return
+  }
+
+  // 校验验证码
+  if (formModel.value.captcha.toLowerCase() !== captchaGeneratedCode.value.toLowerCase()) {
+    ElMessage.error('验证码错误')
+    generateCaptcha()
+    formModel.value.captcha = ''
     return
   }
 
@@ -56,9 +113,35 @@ const login = async () => {
   } catch (error) {
     const msg = error?.message || error?.response?.data?.message || '登录失败'
     ElMessage.error(msg)
+    generateCaptcha()
+    formModel.value.captcha = ''
   } finally {
     loginLoading.value = false
   }
+}
+
+const handleResetPassword = async () => {
+  if (!formModel.value.username) {
+    ElMessage.error('请输入用户名')
+    return
+  }
+  //弹窗确认
+  ElMessageBox.confirm('确定要申请重置密码吗？', '温馨提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(async () => {
+    try {
+      const res = await sendAdminMessageService({
+        account: formModel.value.username,
+        content: '申请重置密码',
+        type: 1,
+      })
+      ElMessage.success('申请重置密码发送成功，等待管理员处理')
+    } catch (error) {
+      ElMessage.error(error.message || '申请重置密码发送失败')
+    }
+  })
 }
 
 const cardRef = ref(null)
@@ -102,6 +185,7 @@ onMounted(() => {
     formModel.value.username = saved
     rememberMe.value = true
   }
+  generateCaptcha()
 })
 onUnmounted(() => {
   const card = cardRef.value
@@ -151,7 +235,7 @@ onUnmounted(() => {
         >
           <div class="form-header">
             <h1 class="title">登录</h1>
-            <div class="subtitle">邻享 换物·闲置流转</div>
+            <div class="subtitle">邻享换物·闲置流转</div>
           </div>
           <el-form-item prop="username">
             <el-input
@@ -174,13 +258,21 @@ onUnmounted(() => {
             />
             <div v-if="capsLockOn" class="caps-tip">已开启大写锁定 Caps Lock</div>
           </el-form-item>
+          <el-form-item prop="captcha">
+            <div class="captcha-input-wrapper">
+              <el-input
+                v-model="formModel.captcha"
+                placeholder="请输入验证码"
+                class="fancy-input"
+              />
+              <div class="captcha-img-box" @click="generateCaptcha">
+                <canvas ref="captchaCanvas" width="115" height="40"></canvas>
+              </div>
+            </div>
+          </el-form-item>
           <div class="options">
             <el-checkbox v-model="rememberMe">记住我</el-checkbox>
-            <el-link
-              type="primary"
-              :underline="false"
-              @click="ElMessage.info('请联系管理员重置密码')"
-            >
+            <el-link type="primary" :underline="false" @click="handleResetPassword">
               忘记密码？
             </el-link>
           </div>
@@ -392,6 +484,30 @@ onUnmounted(() => {
   }
   .button.glow:hover::after {
     opacity: 1;
+  }
+
+  .captcha-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    .captcha-img-box {
+      cursor: pointer;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #f3fbfe;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.25s ease;
+      &:hover {
+        border-color: rgba(0, 194, 255, 0.35);
+        box-shadow: 0 4px 12px rgba(0, 194, 255, 0.1);
+      }
+    }
   }
 }
 

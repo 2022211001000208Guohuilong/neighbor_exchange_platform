@@ -197,6 +197,9 @@ onMounted(() => {
             v-model="row.user_status"
             :active-value="0"
             :inactive-value="1"
+            inline-prompt
+            active-text="启用"
+            inactive-text="禁用"
             @change="handleStatusChange(row)"
           />
         </template>

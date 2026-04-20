@@ -6,6 +6,7 @@ import {
   addAdminService,
   deleteAdminService,
   resetAdminPasswordService,
+  banAdminService,
 } from '@/api/setting'
 import { ElMessage, ElMessageBox, ElDialog } from 'element-plus'
 import { Delete, Plus, RefreshLeft, Key } from '@element-plus/icons-vue'
@@ -111,6 +112,19 @@ const handleSaveAdmin = async () => {
   }
 }
 
+const handleStatusChange = async (row) => {
+  try {
+    await banAdminService(row.id, row.status)
+    getAdminList()
+    ElMessage({
+      message: row.status === 2 ? '管理员禁用成功' : '管理员启用成功',
+      type: 'success',
+    })
+  } catch (error) {
+    ElMessage.error('操作失败')
+  }
+}
+
 const getRoleText = (role) => {
   return role === 2 ? '超级管理员' : '普通管理员'
 }
@@ -140,6 +154,20 @@ onMounted(() => {
       <el-table-column prop="role" label="角色" min-width="100">
         <template #default="{ row }">
           {{ getRoleText(row.role) }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="user_status" label="状态" min-width="50">
+        <template #default="{ row }">
+          <el-switch
+            v-model="row.status"
+            :active-value="1"
+            :inactive-value="2"
+            inline-prompt
+            active-text="启用"
+            inactive-text="禁用"
+            :disabled="row.id === userStore.user.id"
+            @change="handleStatusChange(row)"
+          />
         </template>
       </el-table-column>
       <el-table-column prop="created_time" label="创建时间" width="150">
