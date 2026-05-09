@@ -35,10 +35,7 @@ const editForm = ref({
   goods_lng: '',
   goods_lat: '',
   goods_status: 3,
-<<<<<<< HEAD
   goods_stock: 1,
-=======
->>>>>>> origin/main
 })
 const editRules = {
   user_id: [{ required: true, message: '请输入用户ID', trigger: 'blur' }],
@@ -143,10 +140,7 @@ const handleEdit = (row) => {
     goods_lng: row.goods_lng,
     goods_lat: row.goods_lat,
     goods_status: row.goods_status,
-<<<<<<< HEAD
     goods_stock: row.goods_stock,
-=======
->>>>>>> origin/main
   }
   editDialogVisible.value = true
 }
