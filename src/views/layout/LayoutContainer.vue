@@ -17,7 +17,10 @@ import {
   Message,
   Sell,
   Promotion,
+<<<<<<< HEAD
   ChatDotRound,
+=======
+>>>>>>> origin/main
 } from '@element-plus/icons-vue'
 import adminAvatar from '@/assets/admin.png'
 import adminGeneralAvatar from '@/assets/admin_general.png'
