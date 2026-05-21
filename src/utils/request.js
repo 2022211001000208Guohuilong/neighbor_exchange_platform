@@ -4,7 +4,7 @@ import { ElMessage } from 'element-plus'
 import router from '@/router'
 
 // const baseURL = 'http://big-event-vue-api-t.itheima.net'http://${localhost}:3001
-const baseURL = 'http://10.32.127.27:3001' //10.32.148.202
+const baseURL = 'http://10.32.139.8:3001'
 
 // const envBaseURL = import.meta.env.VITE_API_BASE_URL
 // const runtimeBaseURL =
